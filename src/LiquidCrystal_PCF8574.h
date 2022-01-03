@@ -28,7 +28,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-
 class LiquidCrystal_PCF8574 : public Print
 {
 public:
@@ -58,6 +57,8 @@ public:
   void leftToRight();
   void rightToLeft();
   void createChar(int, byte[]);
+  const char* getDdramBuffer() const;
+  String getCompleteContent() const;
 
   // plus functions from LCDAPI:
   void clear(); // same as init()
@@ -76,7 +77,9 @@ private:
   int _entrymode; ///<flags from entrymode
   int _displaycontrol; ///<flags from displaycontrol
   int _row_offsets[4];
-  
+  int _position;
+  char _ddramBuffer[0x80]; ///< content of the display
+
   // low level functions
   void _send(int value, bool isData = false);
   void _sendNibble(int halfByte, bool isData = false);

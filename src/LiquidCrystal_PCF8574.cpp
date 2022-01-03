@@ -79,6 +79,8 @@ void LiquidCrystal_PCF8574::clear()
   // Instruction: Clear display = 0x01
   _send(0x01);
   delayMicroseconds(1600); // this command takes 1.5ms!
+  memset(_ddramBuffer, ' ', 0x80);
+  _position = 0;
 } // clear()
 
 
@@ -93,6 +95,7 @@ void LiquidCrystal_PCF8574::home()
   // Instruction: Return home = 0x02
   _send(0x02);
   delayMicroseconds(1600); // this command takes 1.5ms!
+  _position = 0;
 } // home()
 
 
@@ -103,6 +106,7 @@ void LiquidCrystal_PCF8574::setCursor(int col, int row)
   if ((col >= 0) && (col < _cols) && (row >= 0) && (row < _lines)) {
     // Instruction: Set DDRAM address = 0x80
     _send(0x80 | (_row_offsets[row] + col));
+    _position = (_row_offsets[row] + col);
   }
 } // setCursor()
 
@@ -236,11 +240,33 @@ void LiquidCrystal_PCF8574::createChar(int location, byte charmap[])
   }
 } // createChar()
 
+const char* LiquidCrystal_PCF8574::getDdramBuffer() const {
+  return _ddramBuffer;
+}
+
+String LiquidCrystal_PCF8574::getCompleteContent() const {
+  String s;
+  for(int row = 0; row < _lines; row++) {
+    for(int col = 0; col < _cols; col++) {
+      s += _ddramBuffer[_row_offsets[row] + col];
+    }
+    s += '\n';
+  }
+  return s;
+}
+
 
 /* The write function is needed for derivation from the Print class. */
 inline size_t LiquidCrystal_PCF8574::write(uint8_t ch)
 {
   _send(ch, true);
+
+  _ddramBuffer[_position] = ch;
+  _position++;
+  if (_position >= 0x80) {
+    _position = 0;
+  }
+
   return 1; // assume sucess
 } // write()
 
